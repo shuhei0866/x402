@@ -1,25 +1,9 @@
-"""Cross-language byte-equivalence verification for batch-settlement collector ABI encoding.
+"""Compare Python collector ABI encoding with static viem 2.48.11 fixtures.
 
-Complements ``test_byte_equivalence_fixtures.py`` (EIP-712 digest layer) by
-covering the *intermediate ABI-encoded bytes* layer: the ERC-3009 deposit
-nonce hash, the ERC-3009 ``collectorData`` payload, the optional EIP-2612
-permit segment, and the Permit2 ``collectorData`` payload.
-
-Each fixture under ``tests/fixtures/batch-settlement-byte-equivalence/v0/``
-named ``L2.[5-8]-*.json`` was produced by the TS-side ``_generator.ts``
-(using ``viem.encodeAbiParameters``) and records the input plus the
-``expected_bytes``. This module re-computes the bytes via the Python SDK's
-``encoding.py`` helpers and asserts byte-for-byte equivalence.
-
-A failure here means TS / Python / spec drift has been introduced in the
-ABI-encoding layer: the facilitator would decode different fields onchain
-than the client encoded, or the ERC-3009 nonce would no longer bind the
-authorization to the same channel.
-
-``_generator.ts`` is added by the sibling PR #2489 — until that PR lands,
-the L2.5-L2.8 fixtures are committed but not yet regeneratable from this
-checkout. The Python verifier in this file is self-sufficient and does
-not require ``_generator.ts`` to run.
+L2.5-L2.8 cover the ERC-3009 nonce and collector data, EIP-2612 permit
+segment, and Permit2 collector data. See the fixture directory's
+COLLECTOR_DATA.md for provenance and independent regeneration instructions.
+These tests do not execute the TypeScript SDK or require #2489.
 """
 
 from __future__ import annotations
@@ -108,8 +92,8 @@ def test_collector_byte_equivalence(name: str) -> None:
     actual = _python_encoding_for(fixture)
     actual_bytes = _normalize_to_bytes(actual)
     assert actual_bytes == expected_bytes, (
-        f"{name}: Python SDK encoding does not match TS-generated fixture.\n"
-        f"  expected (TS): {expected_hex}\n"
+        f"{name}: Python SDK encoding does not match the viem reference fixture.\n"
+        f"  expected (viem): {expected_hex}\n"
         f"  actual (Py):   0x{actual_bytes.hex()}"
     )
 

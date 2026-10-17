@@ -8,8 +8,8 @@
   },
   "expected_bytes": "0x7deb3b60ec0f1bf56dbdd0ffedbadafddeaa08947884ff0f215ce93ee1826102",
   "meta": {
-    "generator": "_generator.ts",
-    "generator_version": "1",
+    "generator": "_generate_collector_data.mjs",
+    "generator_version": "2",
     "viem_version": "2.48.11"
   }
 }
