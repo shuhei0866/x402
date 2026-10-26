@@ -9,21 +9,23 @@ These tests do not execute the TypeScript SDK or require #2489.
 from __future__ import annotations
 
 import json
+import runpy
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-try:
-    from x402.mechanisms.evm.batch_settlement.encoding import (
-        build_eip2612_permit_data,
-        build_erc3009_collector_data,
-        build_erc3009_deposit_nonce,
-        build_permit2_collector_data,
-    )
-except ImportError:
-    pytest.skip("batch_settlement requires evm extras", allow_module_level=True)
+pytest.importorskip("eth_abi")
+pytest.importorskip("eth_utils")
+pytest.importorskip("eth_account")
+pytest.importorskip("web3")
 
+from x402.mechanisms.evm.batch_settlement.encoding import (
+    build_eip2612_permit_data,
+    build_erc3009_collector_data,
+    build_erc3009_deposit_nonce,
+    build_permit2_collector_data,
+)
 
 # Path: this test file lives at
 #   python/x402/tests/unit/mechanisms/evm/batch_settlement/test_collector_data_fixtures.py
@@ -108,3 +110,25 @@ def test_all_fixture_files_present() -> None:
 def test_fixture_dir_exists() -> None:
     """Guard against accidental relocation: the fixture directory must resolve."""
     assert FIXTURE_DIR.is_dir(), f"fixture directory missing: {FIXTURE_DIR}"
+
+
+@pytest.mark.parametrize(
+    "helper_name",
+    [
+        "build_eip2612_permit_data",
+        "build_erc3009_collector_data",
+        "build_erc3009_deposit_nonce",
+        "build_permit2_collector_data",
+    ],
+)
+def test_missing_sdk_helper_is_not_skipped(
+    monkeypatch: pytest.MonkeyPatch, helper_name: str
+) -> None:
+    from x402.mechanisms.evm.batch_settlement import encoding
+
+    monkeypatch.delattr(encoding, helper_name)
+    with pytest.raises(ImportError, match=helper_name):
+        try:
+            runpy.run_path(__file__)
+        except pytest.skip.Exception as exc:
+            pytest.fail(f"Missing SDK helper was treated as an optional dependency: {exc}")
